@@ -641,6 +641,66 @@ body {
   color: var(--gold);
 }
 
+/* ── SHARE BAR ── */
+.share-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin: 32px 0 8px;
+}
+.share-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 22px;
+  border-radius: 40px; border: 1px solid rgba(201,168,76,0.3);
+  background: rgba(30,20,80,0.7);
+  color: var(--gold-light);
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.3s;
+  backdrop-filter: blur(8px);
+}
+.share-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.15); }
+.share-btn:active { transform: translateY(0); }
+.share-btn-icon { font-size: 16px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(30,20,80,0.95); border: 1px solid var(--gold-dim);
+  border-radius: 40px; padding: 12px 24px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px;
+  color: var(--gold-light); z-index: 9999;
+  opacity: 0; pointer-events: none;
+  transition: all 0.4s ease;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SCORE ANIMATION ── */
+.score-fill { width: 0 !important; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.score-fill.animate { width: var(--target-w) !important; }
+
+/* ── TAROT CARD REVEAL ── */
+.tarot-card {
+  opacity: 0; transform: translateY(16px) scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.4s ease;
+}
+.tarot-card.in { opacity: 1; transform: translateY(0) scale(1); }
+
+/* ── MONTH ITEM HOVER ── */
+.month-item { transition: background 0.2s; border-radius: 10px; padding-left: 6px; padding-right: 6px; }
+.month-item:hover { background: rgba(201,168,76,0.04); }
+
+/* ── ORACLE SHIMMER ── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.oracle-gold {
+  background: linear-gradient(90deg, var(--silver) 0%, var(--gold-light) 30%, var(--rose) 50%, var(--gold-light) 70%, var(--silver) 100%);
+  background-size: 400px 100%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--void); }
@@ -657,6 +717,7 @@ body {
   <span class="counter-num" id="counter-num">–</span>
 </div>
 
+<div id="toast"></div>
 <canvas id="starfield"></canvas>
 <div class="nebula nebula-1"></div>
 <div class="nebula nebula-2"></div>
@@ -912,15 +973,65 @@ function calcScores(lifepath, zodiac, birth, focus){
   return base;
 }
 
-// ── MONTHLY FORTUNE ──
-const MONTHS = [
-  { m:7, theme:'突破開啟', stars:5, text:'水星直行帶來清晰思路，是啟動新計劃的黃金窗口。勇敢行動，你的努力將開始結出果實。' },
-  { m:8, theme:'豐盛收穫', stars:4, text:'獅子座能量點燃你的自信光芒。感情上有驚喜突破，職場上獲得認可。保持熱情，一切正在對齊。' },
-  { m:9, theme:'深度沉澱', stars:3, text:'回顧與整理的月份。水星逆行期間，避免重大決定，轉而深化人際關係與自我探索。' },
-  { m:10, theme:'關係重塑', stars:4, text:'天秤季帶來平衡能量。合作機會湧現，可能遇到對你影響深遠的靈魂連結。' },
-  { m:11, theme:'轉化淬煉', stars:4, text:'天蠍座的深水區，是深度轉化的契機。釋放不再服務你的一切，為明年鋪墊基礎。' },
-  { m:12, theme:'整合圓滿', stars:5, text:'木星能量達到頂峰，幸運之門敞開。下半年的努力在此時展現成果，感恩與慶祝屬於你。' },
-];
+// ── MONTHLY FORTUNE（依元素個人化）──
+const MONTH_DATA = {
+  7: {
+    '火': { theme:'衝勁點火', stars:5, text:'火星直行為你注入強大行動力，七月是發起新計劃、衝刺目標的黃金起點。你的熱情感染力極強，身邊的人會因此被你帶動。大膽出手，別讓猶豫偷走機會。' },
+    '土': { theme:'紮根推進', stars:4, text:'七月適合把想法落地成具體行動。土元素讓你在穩定中前進，這個月的每一步都在為下半年的豐收打基礎。財務上有小驚喜，值得把握。' },
+    '風': { theme:'靈感爆發', stars:5, text:'水星直行讓你的思維飛速運轉，七月靈感如泉湧，是記錄想法、表達創意的最佳月份。溝通和社交帶來意想不到的新連結，貴人從對話中現身。' },
+    '水': { theme:'直覺引路', stars:4, text:'七月你的直覺異常敏銳，夢境和感知都在傳遞訊息。跟著內心走，你會發現一條別人看不到的捷徑。情感連結加深，是表達心意的好時機。' },
+  },
+  8: {
+    '火': { theme:'光芒全開', stars:5, text:'獅子座能量與你的火元素完美共振，八月你的自信與魅力達到頂峰。職場上的表現讓人刮目相看，感情上也可能出現令人心動的相遇。享受這道光，它是你應得的。' },
+    '土': { theme:'豐收在望', stars:4, text:'八月土元素加持物質運，之前埋下的努力開始結出果實。工作上獲得具體的認可或回報，財運穩中有升。踏實的你在這個月最容易讓人看見你的價值。' },
+    '風': { theme:'連結豐盛', stars:4, text:'獅子季的熱情與你的社交天賦相輔相成，八月人際關係帶來意外驚喜。一個重要的合作或友情即將深化。表達自己的想法，你的聲音值得被聽見。' },
+    '水': { theme:'情感升溫', stars:4, text:'八月水元素的你在情感面格外豐富，現有的關係可能出現重要的進展。單身者有機會遇到靈魂層面有共鳴的人。記得為自己留下界線，豐盛的前提是不失去自己。' },
+  },
+  9: {
+    '火': { theme:'策略沉澱', stars:3, text:'水星逆行在九月提醒火元素的你放慢腳步。這個月不適合強行衝刺，反而是重新評估方向的好時機。深化重要關係，讓行動更有準頭，十月的爆發需要九月的蓄力。' },
+    '土': { theme:'深度整理', stars:3, text:'九月是整理的月份，適合盤點上半年的成果，清除不必要的負擔。土元素在逆行期的韌性幫助你平穩渡過，財務需謹慎，避免衝動消費。' },
+    '風': { theme:'內省轉向', stars:3, text:'溝通達人的你在水星逆行期要格外留意表達方式，說話前多想一秒。九月適合停下來聆聽，而非說話。你可能重新思考一件擱置已久的事，並找到新的答案。' },
+    '水': { theme:'靈魂對話', stars:4, text:'逆行對水元素的你反而是禮物。九月你的內在世界豐富而深刻，冥想、書寫、獨處都能幫你接收到宇宙傳遞的訊息。讓自己安靜，你會聽見一直被雜音蓋住的答案。' },
+  },
+  10: {
+    '火': { theme:'合作破局', stars:4, text:'天秤季帶來平衡的能量，火元素的你在十月將因合作而創造更大的突破。一對一的關係（無論是事業夥伴或感情）有重要進展。學習傾聽，你的能量加上別人的視角，將創造驚人的成果。' },
+    '土': { theme:'關係深化', stars:4, text:'十月土元素迎來穩健的人際能量。長期耕耘的關係在這個月得到回報，可能有重要的合作或承諾出現。感情關係走向更踏實的階段，這正是你一直期待的穩定。' },
+    '風': { theme:'社交全開', stars:5, text:'天秤能量與風元素的你高度共振，十月是社交與合作的黃金月份。重要的人脈連結即將出現，可能改變你的下半年格局。一場對話，將帶來你意想不到的轉機。' },
+    '水': { theme:'靈魂連結', stars:4, text:'十月你可能遇到一個讓你感覺「認識很久了」的新朋友或合作夥伴。水元素的靈性感知讓你輕易識別出真正有緣份的人。信任這份感覺，它比任何邏輯分析都準確。' },
+  },
+  11: {
+    '火': { theme:'深水轉化', stars:4, text:'天蠍能量讓火元素的你進入深度內在工作期。十一月適合釋放那些佔據你能量的執念和舊模式。這個過程可能不舒適，但每放下一個包袱，你就多一份可以投入真正重要事物的能量。' },
+    '土': { theme:'清除舊皮', stars:4, text:'十一月土元素迎來一次重要的清理。那些不再服務你的人事物，宇宙正在幫你做決定。配合這份清理，而不是抗拒它。空出來的空間，將在十二月填入更好的東西。' },
+    '風': { theme:'思維蛻變', stars:3, text:'天蠍的深度讓善於思考的你開始質疑一些長久以來的信念。十一月是思維蛻變期，你正在從「以前的你認為是對的」過渡到更有深度的理解。這個過程值得尊重。' },
+    '水': { theme:'淬煉昇華', stars:5, text:'天蠍能量與水元素高度共振，十一月你的靈性感知和情緒深度達到高峰。這是一個釋放、療癒、重生的強力月份。讓過去的傷口在這個月得到真正的癒合，你值得輕盈地進入十二月。' },
+  },
+  12: {
+    '火': { theme:'巔峰燃燒', stars:5, text:'木星能量在年末為火元素的你帶來全年最強的幸運加持。十二月是慶祝、收割、感恩的月份。下半年所有的努力在此時展現成果，不要低估你完成的一切。明年的種子，也在這個月悄悄種下。' },
+    '土': { theme:'豐盛圓滿', stars:5, text:'十二月土元素迎來物質與情感的雙重豐收。你在這一年中建立的每一塊基石，在此時都展現出它的價值。好好享受這份穩定帶來的滿足，你的踏實造就了這一切。' },
+    '風': { theme:'整合智慧', stars:5, text:'年末的風元素你正在把這一年的所有經歷整合成智慧。十二月你的思維特別清晰，對未來有了新的視野和方向。分享你的故事，你的洞見將成為他人前進的光。' },
+    '水': { theme:'感恩流動', stars:5, text:'十二月水元素的你情感豐沛而溫暖，與重要的人的連結在這個月達到新的深度。年末的感恩能量特別強，用你的愛灌溉身邊的人，你會發現愛的回流是最美的禮物。' },
+  },
+};
+
+// 生命靈數月份加成語
+const LP_MONTHLY_MOD = {
+  1:'你天生的開創力在這段時間特別容易被看見。', 2:'透過合作，你的能量將倍增。',
+  3:'把想法說出來，貴人就在聽眾之中。', 4:'穩紮穩打是你本月最強的武器。',
+  5:'保持彈性，讓改變成為你的順風。', 6:'照顧好身邊的人，同時也記得照顧自己。',
+  7:'安靜下來，答案比你以為的更近。', 8:'財富能量被激活，重要決策值得信任自己。',
+  9:'你的慷慨與大愛在本月吸引了意想不到的好因緣。',
+  11:'你的靈性感知在這段時間格外準確，信任那些直覺性的閃現。',
+  22:'你有能力在這個月把一個大想法推進一大步。',
+  33:'你的溫暖是本月最強的能量磁場，散出去，一定有回響。',
+};
+
+function getMonthlyFortune(element, lifepath) {
+  return [7,8,9,10,11,12].map(m => {
+    const base = MONTH_DATA[m][element] || MONTH_DATA[m]['土'];
+    const mod = LP_MONTHLY_MOD[lifepath] || '';
+    return { m, theme: base.theme, stars: base.stars, text: base.text + (mod ? ` ${mod}` : '') };
+  });
+}
 
 // ── ELEMENT COMPATIBILITY ──
 const ELEMENT_DESC = {
@@ -955,41 +1066,110 @@ function generatePersonality(zodiac, lifepath, birth, gender){
   `;
 }
 
-// ── FORTUNE AREA CONTENT ──
+// ── FORTUNE AREA CONTENT（依元素×分數個人化）──
 function fortuneContent(area, score, zodiac, lifepath){
-  const contents = {
-    love: {
-      text: score > 75
-        ? `${zodiac.name}在感情場上將大放異彩。金星能量支持深化現有關係，單身者有機會遇到靈魂匹配的連結。生命靈數${lifepath}的能量暗示，七月後感情出現重要轉折。`
-        : `感情需要耐心耕耘。${zodiac.name}的敏感特質在這段時間可能引發誤解，建議多表達內心真實感受。八月後能量轉好，保持開放的心。`,
-      lucky: ['七月見面', '週五能量強', '水晶加持']
+  const el = zodiac.element;
+  const tier = score >= 80 ? 'high' : score >= 65 ? 'mid' : 'low';
+
+  const LOVE = {
+    high: {
+      '火': `${zodiac.name}的感情場氣場全開，主動出擊將帶來驚喜回應。現任伴侶關係加溫，單身者可能在八月遇到讓心跳加速的對象。生命靈數${lifepath}的能量加持，讓你的魅力在下半年格外耀眼。`,
+      '土': `感情運穩中求進，${zodiac.name}最擅長的是用時間證明真心。下半年有機會把暧昧關係推進到明確階段，或讓現有感情走向更深的承諾。別急，你的踏實本來就是最強的吸引力。`,
+      '風': `${zodiac.name}的溝通魅力在感情上大放異彩。一段因「對話」而開始的緣份正在靠近。現有關係中，說出真心話能帶來意想不到的親密感。生命靈數${lifepath}暗示十月有重要的情感連結。`,
+      '水': `水元素賦予你深度的情感感知力，下半年你能精準感受到對方的心。一段深刻的靈魂層次連結正在形成，無論是加深舊情或吸引新緣，你的感情世界即將更豐富。`,
     },
-    career: {
-      text: score > 75
-        ? `職涯正處於上升螺旋。你的${zodiac.element}元素能量與木星形成良好相位，帶來晉升或重要合作機會。生命靈數${lifepath}的領導特質將在九月到十月間特別突出。`
-        : `工作需要策略調整。避免在水星逆行期（9月）做重大職涯決定。專注精進核心技能，這段沉澱期將為明年的爆發奠定基礎。`,
-      lucky: ['週三談判', '北方能量強', '黑色加持']
+    mid: {
+      '火': `感情需要耐心而非衝勁。${zodiac.name}這段時間容易因期望過高而失落，建議先把自己的能量放回自身，吸引力法則會幫你把對的人帶來。九月過後感情場能量明顯好轉。`,
+      '土': `感情平穩但需要主動推進。${zodiac.name}的穩定特質有時讓對方等待太久，這段時間試著多一點表達，讓對方知道你在意。踏出那一步，你想要的回應就在前方。`,
+      '風': `感情面有些許不確定性需要釐清。${zodiac.name}善於分析，但感情有時需要的是感受，不是邏輯。試著放下分析模式，讓心帶路，你會發現關係的風景完全不同。`,
+      '水': `情感上有些波動需要消化。${zodiac.name}的敏感性格在這段時間可能讓你容易被外界影響，記得回歸自己的中心。當你穩定了，感情自然也會跟著穩定。`,
     },
-    wealth: {
-      text: score > 70
-        ? `財運呈現穩定上揚趨勢。${zodiac.planet}的能量支持長期投資決策。建議在木星直行期（十月後）擴大財富佈局，生命靈數${lifepath}的能量有助吸引意外之財。`
-        : `財務上宜守不宜攻。這段時間適合盤點資產、減少不必要支出。十一月後財運好轉，屆時可考慮小額穩健投資。`,
-      lucky: ['週四活躍', '東南方吉', '黃金加持']
-    },
-    health: {
-      text: score > 70
-        ? `身心能量相對充沛。${zodiac.element}元素帶來活力，建議透過戶外活動和冥想強化這份能量。注意在八月高溫時期適度休息，避免能量過度消耗。`
-        : `需要特別關注身心平衡。${zodiac.name}的敏感特質在壓力下容易影響健康，建議固定作息和適度運動。睡眠品質是這段時期的關鍵。`,
-      lucky: ['週日修復', '早晨能量佳', '植物療癒']
+    low: {
+      '火': `感情是下半年需要特別用心耕耘的面向。${zodiac.name}的直接個性有時會讓對方感到壓力，這段時間練習溫柔表達。九月水星逆行後，舊緣有機會以新的面貌回來。`,
+      '土': `感情運需要給自己多一點時間。${zodiac.name}在這段時間可能對感情有些保守，但那份謹慎是在保護你。等到十一月後，你會更清楚自己真正想要的是什麼。`,
+      '風': `感情面有些許阻礙，可能來自溝通上的誤解。${zodiac.名}這段時間要特別留意說話方式，避免水星逆行期做出衝動的表態。深呼吸，給彼此一些空間，是最好的禮物。`,
+      '水': `感情需要先從自我療癒開始。${zodiac.name}這段時間內心可能有些舊傷需要整理，當你對自己更溫柔，愛才能真正流動。這不是壞事，是必要的清理。`,
     }
   };
 
-  const all = {
-    text: `整體運勢在下半年呈現「先蹲後跳」的格局。七到八月是積累期，九月需要謹慎面對水星逆行，十月後能量全面回升，十二月將迎來下半年最佳高峰。`,
-    lucky: ['保持彈性', '直覺指引', '整體協調']
+  const CAREER = {
+    high: {
+      '火': `職涯能量燃燒正旺。${zodiac.element}元素與木星的良好相位帶來晉升或重要合作的機會，你的行動力和領導本能在這段時間格外突出。生命靈數${lifepath}加持，九到十月間有具體的突破出現。`,
+      '土': `事業運厚積薄發，你的努力正在被看見。${zodiac.planet}帶來穩定的上升動能，可能出現長期合作的機會或職涯上的正式確認。踏實的你，正在獲得你應得的位置。`,
+      '風': `溝通力和創意是你這段時間最強的職涯武器。${zodiac.element}元素讓你思維靈活，加上生命靈數${lifepath}的能量，十月前有機會因一個大膽的想法或提案而獲得矚目。`,
+      '水': `職場上的直覺讓你總能在對的時機做出對的選擇。下半年你的敏銳度帶來超乎預期的成果，貴人出現方式往往不按常理，保持開放。`,
+    },
+    mid: {
+      '火': `職涯需要策略調整，衝勁雖在但方向要確認。這段時間先暫停、觀察，找到最省力的前進路徑。九月水星逆行是重新規劃方向的好時機，十月後全力推進。`,
+      '土': `工作穩定但可能感到成長停滯。${zodiac.name}的踏實特質在這段時間需要配合主動爭取機會，別等機會來找你。一個小小的自我推薦，可能開啟意想不到的大門。`,
+      '風': `想法很多但執行力需要加強。這段時間把靈感落地是最重要的課題。選擇一個最有潛力的方向，深耕下去，風元素的你在專注後能爆發驚人的能量。`,
+      '水': `職場上需要更清楚表達自己的需求。水元素的你太善於感知他人，有時忽略了表達自己的立場。試著讓主管或同事知道你的想法，你的洞見比你以為的更有價值。`,
+    },
+    low: {
+      '火': `職涯面臨較大的阻力，但這只是暫時的。避免在九月水星逆行期做重大職涯決定，這段時間是充電、學習、蓄力的黃金期。十一月後，你會帶著更強大的能量重新出發。`,
+      '土': `工作上可能遭遇瓶頸，但不必著急。踏實累積每一天的基本功，這些看似微小的努力在十二月將展現複利效果。你的穩定性是你最大的資本，不要在困境中放棄它。`,
+      '風': `職場溝通出現摩擦需要耐心化解。這段時間先多聽少說，理解各方立場後再表態。水星逆行（九月）是修復關係的好時機，用你的溝通天賦去化解，而非加劇。`,
+      '水': `職涯進展比預期慢，但方向是對的。水元素的耐心是你的優勢，繼續相信自己的節奏。十一月天蠍能量幫助你完成一次重要的轉化，讓你以全新的姿態迎接年末。`,
+    }
   };
 
-  return contents[area] || all;
+  const WEALTH = {
+    high: {
+      '火': `財運強勁，行動力帶來財富機會。${zodiac.planet}的能量支持大膽但有計劃的投資，生命靈數${lifepath}暗示十月後有意外之財的可能。抓住機會，但記得保留一部分安全資金。`,
+      '土': `財運穩定上升，物質生活將更有保障。土元素讓你的理財本能特別靈敏，下半年適合進行長期投資布局。可能出現被動收入或理財回報的好消息。`,
+      '風': `財富透過人際關係流動。一個對話或合作將帶來可觀的財務回報，生命靈數${lifepath}加持你的商業嗅覺。十月後有機會達成一個讓財務狀況明顯改善的協議。`,
+      '水': `直覺帶你到對的財務機會面前。水元素讓你對資金流動特別敏感，下半年有機會憑藉直覺做出讓人刮目相看的理財選擇。信任那個「這個值得投資」的感覺。`,
+    },
+    mid: {
+      '火': `財運中等，收支基本平衡。這段時間避免衝動消費，把資金集中在真正重要的事上。下半年末有機會改善財務狀況，先守住現有的，後面才能好好出手。`,
+      '土': `財務需要更仔細的規劃。${zodiac.name}有穩健的理財本能，但這段時間也許需要重新審視支出結構。清除不必要的固定支出，為下半年末可能出現的投資機會留下彈藥。`,
+      '風': `財務上的機會需要你主動去挖掘。這段時間多問、多探索、多了解，一個看起來不起眼的資訊可能藏著財富的線索。人脈是你最被低估的財富工具。`,
+      '水': `財務需要更清醒的頭腦。水元素的你有時被情感影響財務決策，這段時間在花錢之前多問自己一個問題：「這是我需要的，還是我感覺上需要的？」`,
+    },
+    low: {
+      '火': `財務面臨壓力，但這只是下半年的序章。現在是守，不是攻的時機。停止任何高風險的財務決策，十一月後財運明顯好轉，屆時再謹慎出手。`,
+      '土': `財務需要緊縮，這段時間適合盤點資產、減少不必要支出。土元素的你最擅長在困難中找到穩定的立足點，用你的踏實和紀律渡過這段調整期。`,
+      '風': `財務上可能因輕信或疏忽而受損，這段時間要對所有財務決策多一份謹慎。合約和協議一定要仔細閱讀，聽從你的邏輯，不要被情緒或別人的說辭影響。`,
+      '水': `財務能量偏低，宜守不宜進。這段時間最好的財務策略是「不損失」。水元素的你在低能量期容易感到焦慮，記住：這只是週期，十二月一定會比現在好。`,
+    }
+  };
+
+  const HEALTH = {
+    high: {
+      '火': `身心能量充沛。${zodiac.element}的活力在下半年格外旺盛，適合挑戰新的運動或提高訓練強度。注意在八月高溫時期適度補水，火元素容易消耗過快，定期讓自己徹底休息一次。`,
+      '土': `健康狀況穩定，日常的規律是你最好的養生法。土元素加持讓你身體的恢復力強，小毛病不容易惡化。這段時間可以建立一個讓你長期受益的健康習慣。`,
+      '風': `身心靈活，精神狀態佳。風元素的你容易在腦力方面超載，下半年記得讓大腦定期「斷網」——閉眼深呼吸、散步、什麼都不想，是你最需要的充電方式。`,
+      '水': `直覺讓你對身體的訊號格外敏感，這是很好的健康資本。下半年遵從身體想要休息就休息、想要動就動的訊號，不要用意志力強迫身體。情緒健康特別重要，定期清理心理負擔。`,
+    },
+    mid: {
+      '火': `健康整體不錯，但容易透支。火元素的你衝得太快時很容易忽略身體的警訊，這段時間練習在感覺累之前就停下來充電。規律睡眠是你最需要投資的健康習慣。`,
+      '土': `健康狀況需要比平時多一點關注。土元素的緩慢特質讓你在身體出問題時反應較慢，這段時間不要忽視身體小訊號。適度增加運動頻率，讓氣血流通更順暢。`,
+      '風': `精神能量消耗偏大，需要主動補充。風元素的你思緒容易停不下來，久了會影響睡眠品質。建立睡前的放鬆儀式，讓大腦在入睡前有足夠的緩衝時間。`,
+      '水': `情緒起伏對身體的影響比你以為的大。水元素的你要特別重視心理健康，學習情緒的出口（運動、創作、傾訴）而不是壓抑。身體和心靈是一體的，善待自己的情感就是善待健康。`,
+    },
+    low: {
+      '火': `身體需要更多休息，不要硬撐。火元素在低能量期容易過度燃燒自己，這段時間最重要的健康功課是：學會停下來。給自己一個真正的假期，讓身心完全充電。`,
+      '土': `健康需要特別留意。這段時間身體可能有一些積累的疲勞需要調理，不要把小症狀拖成大問題。土元素的你在休息方面往往需要外力提醒，現在就是那個提醒。`,
+      '風': `神經系統需要額外的照顧。風元素在壓力下容易焦慮和失眠，這段時間減少咖啡因、螢幕時間，增加自然的戶外活動。你的身體需要的是安靜，而不是更多刺激。`,
+      '水': `身心都需要深度的修復。水元素的你在低能量期特別容易吸收周遭的負能量，這段時間要有意識地保護自己的能量場。減少消耗性的社交，多做讓自己感覺被滋養的事。`,
+    }
+  };
+
+  const LUCKY = {
+    love:   { '火':['週五相遇', '玫瑰石英', '向西走'], '土':['週六約會', '月光石', '向南走'], '風':['週三對話', '海藍寶', '向東走'], '水':['月圓之夜', '紫水晶', '近水邊'] },
+    career: { '火':['週二出擊', '虎眼石', '向上衝'], '土':['週四深耕', '黑曜石', '向北走'], '風':['週三提案', '青金石', '朝陽方'], '水':['週一直覺', '白水晶', '靠近靜水'] },
+    wealth: { '火':['週四出手', '黃水晶', '東南方'], '土':['月初理財', '綠幽靈', '西南方'], '風':['週二談判', '拉長石', '東方'], '水':['初一十五', '碧璽', '北方水域'] },
+    health: { '火':['早晨運動', '紅石榴', '山林氣場'], '土':['傍晚散步', '綠色食物', '大地接地'], '風':['深呼吸法', '薄荷精油', '高處視野'], '水':['泡澡冥想', '海鹽淨化', '月光浴'] },
+  };
+
+  const map = { high: LOVE.high, mid: LOVE.mid, low: LOVE.low };
+  const areas = { love: LOVE, career: CAREER, wealth: WEALTH, health: HEALTH };
+  const areaData = areas[area];
+  if(!areaData) return { text:`整體運勢在下半年呈現「先蹲後跳」的格局。七到八月是積累期，九月需謹慎，十月後能量全面回升，十二月迎來最佳高峰。`, lucky:['保持彈性','直覺指引','整體協調'] };
+
+  const text = (areaData[tier]?.[el]) || (areaData['mid']?.['土']) || '';
+  const lucky = (LUCKY[area]?.[el]) || ['本月能量', '感恩心態', '靜心冥想'];
+  return { text, lucky };
 }
 
 // ── 姓名學：筆劃數對照表 ──
@@ -1243,6 +1423,61 @@ const ORACLES = [
   '你現在所經歷的，將成為你有一天能照亮別人黑暗的那道光。',
 ];
 
+// ── TOAST ──
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+// ── SHARE ──
+function generateShareText(name, zodiac, lifepath, lp, tarotCards, oracle){
+  return `✦ ${name} 的 2025 下半年命運解讀 ✦
+
+⭐ 太陽星座：${zodiac.name}（${zodiac.element}元素）
+🔢 生命靈數：${lifepath}「${lp.name}」
+🃏 核心塔羅：${tarotCards[1].name}（${tarotCards[1].keyword}）
+
+${oracle}
+
+—— 在命運之鏡探索你的 2025 ——`;
+}
+
+function shareResult(){
+  const text = document._shareText;
+  if(!text) return;
+  if(navigator.share){
+    navigator.share({ title:'2025 下半年命運解讀', text }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>showToast('✦ 已複製，貼給朋友吧')).catch(()=>showToast('請手動複製'));
+  }
+}
+
+function copyResult(){
+  const text = document._shareText;
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>showToast('✦ 解讀摘要已複製')).catch(()=>showToast('請手動複製'));
+}
+
+// ── SCORE ANIMATION ──
+function animateScores(){
+  document.querySelectorAll('.score-fill').forEach(el=>{
+    const target = el.dataset.score;
+    if(!target) return;
+    el.style.setProperty('--target-w', target+'%');
+    requestAnimationFrame(()=>{ el.classList.add('animate'); });
+  });
+  document.querySelectorAll('.score-num[data-score]').forEach(el=>{
+    const target = parseInt(el.dataset.score);
+    let cur = 0; const step = Math.ceil(target/30);
+    const timer = setInterval(()=>{
+      cur = Math.min(cur+step, target);
+      el.textContent = cur;
+      if(cur >= target) clearInterval(timer);
+    }, 30);
+  });
+}
+
 // ── MAIN FUNCTION ──
 function startRitual(){
   const name = document.getElementById('inp-name').value.trim();
@@ -1283,6 +1518,9 @@ function buildResults(name, birth, gender, focus){
   const oracle = ORACLES[Math.floor(Math.random() * ORACLES.length)];
   const el = ELEMENT_DESC[zodiac.element];
   const fiveGrid = calcFiveGrid(name);
+  const months = getMonthlyFortune(zodiac.element, lifepath);
+  const shareText = generateShareText(name, zodiac, lifepath, lp, tarotCards, oracle);
+  document._shareText = shareText;
 
   const focusLabel = { love:'感情', career:'事業', wealth:'財富', health:'健康', growth:'成長', family:'家庭' };
   const starRender = n => '★'.repeat(n)+'☆'.repeat(5-n);
@@ -1424,8 +1662,8 @@ function buildResults(name, birth, gender, focus){
             <span class="fortune-label">${a.label}</span>
           </div>
           <div class="fortune-score">
-            <div class="score-bar"><div class="score-fill" style="width:${s}%;background:${scoreBarColor(s)}"></div></div>
-            <div class="score-num">${s}</div>
+            <div class="score-bar"><div class="score-fill" data-score="${s}" style="background:${scoreBarColor(s)}"></div></div>
+            <div class="score-num" data-score="${s}">0</div>
           </div>
           <div class="fortune-text">${fc.text}</div>
           <div class="lucky-tags">${fc.lucky.map(t=>`<span class="lucky-tag">${t}</span>`).join('')}</div>
@@ -1441,7 +1679,7 @@ function buildResults(name, birth, gender, focus){
       <span class="block-title">下半年逐月能量預報</span>
     </div>
     <div class="month-timeline">
-      ${MONTHS.map(m=>`
+      ${months.map(m=>`
       <div class="month-item">
         <div class="month-badge">
           <div class="month-num">${m.m}</div>
@@ -1497,8 +1735,18 @@ function buildResults(name, birth, gender, focus){
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:16px;font-size:12px;color:rgba(180,160,220,0.35);letter-spacing:2px">
-    ✦ 此解讀融合塔羅、生命靈數、星座能量，僅供靈性探索參考 ✦
+  <!-- SHARE -->
+  <div class="share-bar reveal">
+    <button class="share-btn" onclick="shareResult()">
+      <span class="share-btn-icon">🔮</span> 分享解讀結果
+    </button>
+    <button class="share-btn" onclick="copyResult()">
+      <span class="share-btn-icon">✦</span> 複製摘要文字
+    </button>
+  </div>
+
+  <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(180,160,220,0.3);letter-spacing:2px">
+    ✦ 此解讀融合塔羅、生命靈數、姓名學、星座能量，僅供靈性探索參考 ✦
   </div>
 
   <button class="restart-btn" onclick="restartRitual()">↺ 重新解讀</button>
@@ -1517,6 +1765,12 @@ function buildResults(name, birth, gender, focus){
     reveals.forEach((el,i)=>{
       setTimeout(()=>el.classList.add('in'), i*120);
     });
+    // Tarot cards stagger
+    document.querySelectorAll('.tarot-card').forEach((c,i)=>{
+      setTimeout(()=>c.classList.add('in'), 600 + i*150);
+    });
+    // Score animation
+    setTimeout(animateScores, 800);
   }, 200);
 }
 
