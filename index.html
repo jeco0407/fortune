@@ -643,7 +643,19 @@ function drawCards(seed,count){
   return cards;
 }
 
-// ── TAROT CARD SVG ART ──
+// ── TAROT CARD IMAGE PATHS ──
+const CARD_IMAGES=[
+  'tarot/00-fool.png','tarot/01-magician.png','tarot/02-high-priestess.png',
+  'tarot/03-empress.png','tarot/04-emperor.png','tarot/05-hierophant.png',
+  'tarot/06-lovers.png','tarot/07-chariot.png','tarot/08-strength.png',
+  'tarot/09-hermit.png','tarot/10-wheel.png','tarot/11-justice.png',
+  'tarot/12-hanged-man.png','tarot/13-death.png','tarot/14-temperance.png',
+  'tarot/15-devil.png','tarot/16-tower.png','tarot/17-star.png',
+  'tarot/18-moon.png','tarot/19-sun.png','tarot/20-judgement.png',
+  'tarot/21-world.png',
+];
+
+// ── TAROT CARD SVG ART (fallback) ──
 function getCardSVG(idx){
   // shared frame helper
   const frame=(bg1,bg2,roman,nameTxt,art)=>`<svg viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg" style="display:block">
@@ -1388,10 +1400,14 @@ function buildTarotTab(name, zodiac, lifepath, birth, seed, question){
   const colClass=spread.count===1?'cols-1':spread.count<=3?'cols-3':spread.count<=6?'cols-3':'cols-4';
 
   const cardsHtml=cards.map((c,i)=>{
-    const svgArt=getCardSVG(TAROT_MAJOR.findIndex(t=>t.name===c.name));
+    const cardIdx=TAROT_MAJOR.findIndex(t=>t.name===c.name);
+    const imgSrc=CARD_IMAGES[cardIdx]||'';
+    const cardVisual=imgSrc
+      ? `<img src="${imgSrc}" alt="${c.name}" style="width:100%;height:auto;display:block;border-radius:8px;">`
+      : getCardSVG(cardIdx);
     return `<div class="card-slot">
     <div class="card-pos-label">${spread.positions[i]}</div>
-    <div class="card-face-wrap${c.reversed?' reversed':''}">${svgArt}</div>
+    <div class="card-face-wrap${c.reversed?' reversed':''}">${cardVisual}</div>
     <div class="card-badge ${c.reversed?'rev':'up'}">${c.reversed?'逆位':'正位'}</div>
     <div class="card-keyword-label">${c.keyword}</div>
   </div>`;}).join('');
