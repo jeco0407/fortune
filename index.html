@@ -1616,7 +1616,9 @@ const FIREBASE_CONFIG={
 const FIREBASE_DB_URL=FIREBASE_CONFIG.databaseURL;
 (async function initOnlineCounter(){
   if(FIREBASE_DB_URL.includes('YOUR_PROJECT_ID')){document.getElementById('counter-num').textContent='?';return;}
-  const sessionId=crypto.randomUUID();
+  // 同一個 tab 重新整理沿用同一個 ID，避免重複計算
+  let sessionId=sessionStorage.getItem('fortune_sid');
+  if(!sessionId){sessionId=crypto.randomUUID();sessionStorage.setItem('fortune_sid',sessionId);}
   const userPath=`${FIREBASE_DB_URL}/online_users/${sessionId}.json`;
 
   // 寫入心跳
