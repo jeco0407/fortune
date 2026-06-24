@@ -471,7 +471,7 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
 
 // ── STATE ──
 let selectedGender='';
-const selectedMethods=new Set();
+let selectedMethod='';
 let selectedSpread='';
 
 function selectGender(el,val){
@@ -480,10 +480,11 @@ function selectGender(el,val){
 }
 function toggleMethod(el){
   const m=el.dataset.method;
-  if(selectedMethods.has(m)){selectedMethods.delete(m);el.classList.remove('active');}
-  else{selectedMethods.add(m);el.classList.add('active');}
-  document.getElementById('spread-section').style.display=selectedMethods.has('tarot')?'block':'none';
-  if(!selectedMethods.has('tarot')) selectedSpread='';
+  document.querySelectorAll('.method-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedMethod=m;
+  document.getElementById('spread-section').style.display=m==='tarot'?'block':'none';
+  if(m!=='tarot') selectedSpread='';
 }
 function selectSpread(el){
   document.querySelectorAll('.spread-opt').forEach(o=>o.classList.remove('active'));
@@ -865,8 +866,8 @@ function startRitual(){
   if(!name){showToast('請輸入本名');return;}
   if(!birthVal){showToast('請輸入出生日期');return;}
   if(!gender){showToast('請選擇性別');return;}
-  if(selectedMethods.size===0){showToast('請至少選擇一種分析方式');return;}
-  if(selectedMethods.has('tarot')&&!selectedSpread){showToast('請選擇塔羅牌陣');return;}
+  if(!selectedMethod){showToast('請選擇一種分析方式');return;}
+  if(selectedMethod==='tarot'&&!selectedSpread){showToast('請選擇塔羅牌陣');return;}
 
   const birth=new Date(birthVal);
   const city=document.getElementById('inp-city').value;
@@ -891,21 +892,11 @@ function buildResults(name, birth, gender, city, tarotQuestion){
   const seed=birth.getFullYear()*10000+(birth.getMonth()+1)*100+birth.getDate()+name.charCodeAt(0)*7+Date.now()%1000;
   const fiveGrid=calcFiveGrid(name);
   const oracle=ORACLES[Math.floor(Math.random()*ORACLES.length)];
-  const methods=[...selectedMethods];
-
-  // Build tab buttons
-  const tabLabels={zodiac:`${zodiac.emoji} 星座分析`,numerology:'🔢 生命靈數',tarot:'🃏 塔羅占卜'};
-
-  const tabNav=methods.map((m,i)=>`<button class="tab-btn${i===0?' active':''}" onclick="switchTab('${m}',this)">${tabLabels[m]}</button>`).join('');
-
-  // Build each tab content
-  const tabContents=methods.map((m,i)=>{
-    let content='';
-    if(m==='zodiac') content=buildZodiacTab(zodiac,lifepath,lp,birth,city,gender,fiveGrid);
-    else if(m==='numerology') content=buildNumerologyTab(name,birth,lifepath,lp,personalYear,py,fiveGrid,city);
-    else if(m==='tarot') content=buildTarotTab(name,zodiac,lifepath,birth,seed,tarotQuestion);
-    return `<div id="tab-${m}" class="tab-content${i===0?' active':''}">${content}</div>`;
-  }).join('');
+  const m=selectedMethod;
+  let content='';
+  if(m==='zodiac') content=buildZodiacTab(zodiac,lifepath,lp,birth,city,gender,fiveGrid);
+  else if(m==='numerology') content=buildNumerologyTab(name,birth,lifepath,lp,personalYear,py,fiveGrid,city);
+  else if(m==='tarot') content=buildTarotTab(name,zodiac,lifepath,birth,seed,tarotQuestion);
 
   const html=`
   <div class="results-header reveal">
@@ -913,8 +904,7 @@ function buildResults(name, birth, gender, city, tarotQuestion){
     <div class="results-title">2025 下半年命運藍圖</div>
     <div class="results-subtitle">已生成 AI 解讀提示詞・可直接複製使用</div>
   </div>
-  <div class="tab-nav">${tabNav}</div>
-  ${tabContents}
+  ${content}
 
   <div class="oracle-box reveal" style="margin-top:32px">
     <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--gold-dim);margin-bottom:20px">✦ 宇宙給你的話 ✦</div>
@@ -1093,7 +1083,7 @@ function restartRitual(){
   document.getElementById('results').style.display='none';
   document.getElementById('results').innerHTML='';
   document.getElementById('form-section').style.display='block';
-  selectedMethods.clear();
+  selectedMethod='';
   selectedSpread='';
   selectedGender='';
   document.querySelectorAll('.method-card,.spread-opt,.radio-opt').forEach(el=>el.classList.remove('active','selected'));
