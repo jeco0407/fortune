@@ -399,11 +399,19 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
           </div>
         </div>
 
-        <!-- TAROT SPREAD (shown when tarot selected) -->
+        <!-- TAROT SPREAD + QUESTION (shown when tarot selected) -->
         <div class="form-field full" id="spread-section" style="display:none">
           <div class="spread-section">
             <div class="method-section-label">選擇塔羅牌陣</div>
             <div class="spread-grid" id="spread-grid"></div>
+          </div>
+          <div style="margin-top:24px">
+            <div class="method-section-label">你想問塔羅的問題</div>
+            <div style="font-size:11px;color:var(--silver-dim);margin-bottom:12px;line-height:1.7">
+              在抽牌前，請在心中或下方寫下你想探索的問題。<br>
+              好問題通常是開放式的，例如：「我在感情上需要知道什麼？」、「我的事業下半年有什麼值得留意的？」
+            </div>
+            <textarea class="field-input" id="inp-tarot-question" rows="3" placeholder="例如：我下半年在感情上需要留意什麼？（不填則以「2025年下半年整體運勢」為主題）" style="resize:vertical;min-height:80px;line-height:1.7"></textarea>
           </div>
         </div>
 
@@ -803,14 +811,15 @@ ${gridInfo}
 6. 具體的行動建議`;
 }
 
-function genTarotPrompt(spreadKey, cards, zodiac, lifepath, birth){
+function genTarotPrompt(spreadKey, cards, zodiac, lifepath, birth, question){
   const spread=SPREADS[spreadKey];
   const cardLines=cards.map((c,i)=>`位置${i+1} - ${spread.positions[i]}：${c.name}（${c.reversed?'逆位':'正位'}）`).join('\n');
   const birthStr=`${birth.getFullYear()}/${birth.getMonth()+1}/${birth.getDate()}`;
+  const topic=question||'2025年下半年整體運勢';
   return `【塔羅占卜解讀資料】
 
 牌陣：${spread.name}（${spread.count}張）
-占問主題：2025年下半年整體運勢
+占問問題：${topic}
 
 占問者資訊：
 ・出生日期：${birthStr}
@@ -825,13 +834,13 @@ ${spread.positions.map((p,i)=>`位置${i+1}「${p}」：代表 ${getPosDesc(spre
 
 ═══════════════════════════════
 
-請根據${spread.name}的牌陣結構，為我做完整解讀：
+請根據${spread.name}的牌陣結構，針對我的占問問題「${topic}」做完整解讀：
 1. 逐一解讀每個位置的牌義（正位/逆位的差異）
-2. 牌與牌之間的能量連結與整體故事
-3. 整體趨勢與最重要的訊息
+2. 牌與牌之間的能量連結，以及它們共同說明了什麼故事
+3. 整體趨勢與最核心的訊息——直接回應我的問題
 4. 特別需要關注的牌或位置
-5. 結合我的星座（${zodiac.name}）與靈數（${lifepath}）給出個人化建議
-6. 具體的行動方向`;
+5. 結合我的星座（${zodiac.name}）與生命靈數（${lifepath}）給出個人化洞見
+6. 具體可行的建議與下一步行動`;
 }
 
 function getPosDesc(spreadKey, idx){
@@ -861,6 +870,7 @@ function startRitual(){
 
   const birth=new Date(birthVal);
   const city=document.getElementById('inp-city').value;
+  const tarotQuestion=document.getElementById('inp-tarot-question').value.trim();
 
   document.getElementById('form-section').style.display='none';
   const loading=document.getElementById('loading');
@@ -868,11 +878,11 @@ function startRitual(){
   ['ls1','ls2','ls3','ls4','ls5'].forEach((id,i)=>{
     setTimeout(()=>document.getElementById(id).classList.add('visible'),i*600+400);
   });
-  setTimeout(()=>{loading.style.display='none';buildResults(name,birth,gender,city);},3800);
+  setTimeout(()=>{loading.style.display='none';buildResults(name,birth,gender,city,tarotQuestion);},3800);
 }
 
 // ── BUILD RESULTS ──
-function buildResults(name, birth, gender, city){
+function buildResults(name, birth, gender, city, tarotQuestion){
   const zodiac=getZodiac(birth);
   const lifepath=calcLifePath(birth);
   const lp=LIFE_PATH[lifepath]||LIFE_PATH[9];
@@ -893,7 +903,7 @@ function buildResults(name, birth, gender, city){
     let content='';
     if(m==='zodiac') content=buildZodiacTab(zodiac,lifepath,lp,birth,city,gender,fiveGrid);
     else if(m==='numerology') content=buildNumerologyTab(name,birth,lifepath,lp,personalYear,py,fiveGrid,city);
-    else if(m==='tarot') content=buildTarotTab(name,zodiac,lifepath,birth,seed);
+    else if(m==='tarot') content=buildTarotTab(name,zodiac,lifepath,birth,seed,tarotQuestion);
     return `<div id="tab-${m}" class="tab-content${i===0?' active':''}">${content}</div>`;
   }).join('');
 
@@ -1016,10 +1026,11 @@ function buildNumerologyTab(name, birth, lifepath, lp, personalYear, py, fiveGri
   </div>`;
 }
 
-function buildTarotTab(name, zodiac, lifepath, birth, seed){
+function buildTarotTab(name, zodiac, lifepath, birth, seed, question){
   const spread=SPREADS[selectedSpread];
   const cards=drawCards(seed,spread.count);
-  const prompt=genTarotPrompt(selectedSpread,cards,zodiac,lifepath,birth);
+  const prompt=genTarotPrompt(selectedSpread,cards,zodiac,lifepath,birth,question);
+  const displayQ=question||'2025年下半年整體運勢';
 
   const colClass=spread.count===1?'cols-1':spread.count<=3?'cols-3':spread.count<=6?'cols-3':'cols-4';
 
@@ -1035,7 +1046,14 @@ function buildTarotTab(name, zodiac, lifepath, birth, seed){
   return `
   <div class="result-block reveal">
     <div class="block-header"><span class="block-icon">${spread.icon}</span><span class="block-title">${spread.name}・${spread.count}張牌</span></div>
-    <p style="font-size:13px;color:var(--silver-dim);margin-bottom:20px;font-family:'EB Garamond',serif;font-style:italic">${spread.desc}・每張牌的位置含義已包含在 AI 提示詞中</p>
+    <div style="background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px">
+      <span style="font-size:16px;flex-shrink:0">🔮</span>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--gold-dim);margin-bottom:5px">占問問題</div>
+        <div style="font-size:14px;color:var(--silver);font-family:'EB Garamond',serif;font-style:italic;line-height:1.6">${displayQ}</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--silver-dim);margin-bottom:20px">${spread.desc}・每張牌的位置含義已包含在 AI 提示詞中</p>
     <div class="cards-grid ${colClass}">${cardsHtml}</div>
     <div class="block-content">
       <p>以上是你的 <span class="highlight">${spread.name}</span> 牌陣結果。${spread.count}個位置各有其意義，最精準的解讀需要結合牌義、位置含義與你的個人情況。</p>
@@ -1080,6 +1098,7 @@ function restartRitual(){
   selectedGender='';
   document.querySelectorAll('.method-card,.spread-opt,.radio-opt').forEach(el=>el.classList.remove('active','selected'));
   document.getElementById('spread-section').style.display='none';
+  document.getElementById('inp-tarot-question').value='';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
