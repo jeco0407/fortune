@@ -181,14 +181,54 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
 .card-slot{text-align:center;opacity:0;transform:translateY(14px) scale(.97);transition:all .5s;}
 .card-slot.in{opacity:1;transform:none;}
 .card-pos-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px;}
-.card-face-wrap{position:relative;display:inline-block;width:100%;cursor:pointer;transition:transform .35s,filter .35s;}
-.card-face-wrap:hover{transform:translateY(-6px) scale(1.03);filter:drop-shadow(0 12px 24px rgba(201,168,76,.4));}
-.card-face-wrap svg{width:100%;height:auto;border-radius:8px;}
-.card-face-wrap.reversed svg{transform:rotate(180deg);}
-.card-keyword-label{font-size:11px;color:var(--silver-dim);font-style:italic;font-family:'EB Garamond',serif;margin-top:7px;line-height:1.5;}
-.card-badge{display:inline-block;margin-top:5px;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:4px;}
+
+/* FLIP ANIMATION */
+.card-flip-wrapper{width:100%;aspect-ratio:100/160;position:relative;perspective:700px;cursor:pointer;border-radius:8px;}
+.card-flip-wrapper:hover .card-back-face{filter:drop-shadow(0 0 12px rgba(201,168,76,.5));transform:scale(1.02);}
+.card-flip-wrapper.done{cursor:default;}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.4,0,.2,1);}
+.card-inner.flipped{transform:rotateY(180deg);}
+.card-back-face,.card-front-face{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;transition:filter .3s,transform .3s;}
+.card-back-face{transform:rotateY(0deg);}
+.card-back-face svg{width:100%;height:100%;display:block;}
+.card-front-face{transform:rotateY(180deg);}
+.card-front-face img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;}
+.card-front-face.reversed img{transform:rotate(180deg);}
+
+.card-keyword-label{font-size:11px;color:var(--silver-dim);font-style:italic;font-family:'EB Garamond',serif;margin-top:7px;line-height:1.5;opacity:0;transition:opacity .5s .3s;}
+.card-keyword-label.show{opacity:1;}
+.card-badge{display:inline-block;margin-top:5px;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:4px;opacity:0;transition:opacity .4s .2s;}
+.card-badge.show{opacity:1;}
 .card-badge.rev{color:var(--rose);background:rgba(232,180,184,.12);border:1px solid rgba(232,180,184,.25);}
 .card-badge.up{color:var(--gold-dim);background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);}
+
+/* FLIP COUNTER */
+.flip-counter{text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:var(--gold-dim);margin-bottom:20px;transition:color .4s;}
+.flip-counter.done{color:var(--gold);}
+.flip-counter .f-cur{color:var(--gold-light);font-size:14px;}
+
+/* AI BUTTONS */
+.ai-row{margin-top:16px;}
+.ai-row-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--silver-dim);text-transform:uppercase;margin-bottom:10px;}
+.ai-btns{display:flex;flex-wrap:wrap;gap:8px;}
+.ai-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:40px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--silver);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .3s;white-space:nowrap;}
+.ai-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.ai-btn .ai-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ai-btn.chatgpt{border-color:rgba(16,163,127,.35);}
+.ai-btn.chatgpt:hover{background:rgba(16,163,127,.12);color:#10a37f;border-color:#10a37f;}
+.ai-btn.chatgpt .ai-dot{background:#10a37f;}
+.ai-btn.claude{border-color:rgba(215,101,33,.35);}
+.ai-btn.claude:hover{background:rgba(215,101,33,.12);color:#d76521;border-color:#d76521;}
+.ai-btn.claude .ai-dot{background:#d76521;}
+.ai-btn.gemini{border-color:rgba(66,133,244,.35);}
+.ai-btn.gemini:hover{background:rgba(66,133,244,.12);color:#4285f4;border-color:#4285f4;}
+.ai-btn.gemini .ai-dot{background:linear-gradient(135deg,#4285f4,#ea4335,#fbbc05,#34a853);}
+.ai-btn.copilot{border-color:rgba(0,120,215,.35);}
+.ai-btn.copilot:hover{background:rgba(0,120,215,.12);color:#0078d7;border-color:#0078d7;}
+.ai-btn.copilot .ai-dot{background:#0078d7;}
+.ai-btn.perplexity{border-color:rgba(32,178,170,.35);}
+.ai-btn.perplexity:hover{background:rgba(32,178,170,.12);color:#20b2aa;border-color:#20b2aa;}
+.ai-btn.perplexity .ai-dot{background:#20b2aa;}
 
 /* FORTUNE SCORES */
 .fortune-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
@@ -641,6 +681,104 @@ function drawCards(seed,count){
     }
   }
   return cards;
+}
+
+// ── CARD BACK SVG ──
+const CARD_BACK_SVG=`<svg viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%">
+<defs>
+  <pattern id="cbp" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+    <path d="M8 2 L9.2 6 L13 6 L10 8.4 L11.2 12 L8 10 L4.8 12 L6 8.4 L3 6 L6.8 6Z" fill="#c9a84c" opacity=".1"/>
+  </pattern>
+  <radialGradient id="cbg" cx="50%" cy="50%" r="55%">
+    <stop offset="0%" stop-color="#2a0a5a" stop-opacity=".7"/>
+    <stop offset="100%" stop-color="#04040f" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="100" height="160" fill="#0d0820" rx="7"/>
+<rect width="100" height="160" fill="url(#cbp)" rx="7"/>
+<rect width="100" height="160" fill="url(#cbg)" rx="7"/>
+<rect x="3" y="3" width="94" height="154" fill="none" stroke="#c9a84c" stroke-width="1.2" rx="5.5" opacity=".8"/>
+<rect x="7" y="7" width="86" height="146" fill="none" stroke="#c9a84c" stroke-width=".35" rx="4" opacity=".4"/>
+<circle cx="50" cy="80" r="26" fill="none" stroke="#c9a84c" stroke-width=".5" opacity=".3"/>
+<circle cx="50" cy="80" r="18" fill="none" stroke="#c9a84c" stroke-width=".35" opacity=".25"/>
+<path d="M50 54 L53.5 65 L65 65 L56 72 L59 83 L50 76 L41 83 L44 72 L35 65 L46.5 65Z" fill="#c9a84c" opacity=".45"/>
+<circle cx="50" cy="80" r="5" fill="#e8c86d" opacity=".35"/>
+<circle cx="50" cy="80" r="2.5" fill="#c9a84c" opacity=".5"/>
+<path d="M11 11 L19 11 L11 19Z" fill="#c9a84c" opacity=".2"/>
+<path d="M89 11 L81 11 L89 19Z" fill="#c9a84c" opacity=".2"/>
+<path d="M11 149 L19 149 L11 141Z" fill="#c9a84c" opacity=".2"/>
+<path d="M89 149 L81 149 L89 141Z" fill="#c9a84c" opacity=".2"/>
+<circle cx="10" cy="10" r="2" fill="#c9a84c" opacity=".5"/>
+<circle cx="90" cy="10" r="2" fill="#c9a84c" opacity=".5"/>
+<circle cx="10" cy="150" r="2" fill="#c9a84c" opacity=".5"/>
+<circle cx="90" cy="150" r="2" fill="#c9a84c" opacity=".5"/>
+<text x="50" y="30" text-anchor="middle" font-family="serif" font-size="9" fill="#c9a84c" opacity=".4" letter-spacing="2">✦ ✦ ✦</text>
+<text x="50" y="138" text-anchor="middle" font-family="serif" font-size="9" fill="#c9a84c" opacity=".4" letter-spacing="2">✦ ✦ ✦</text>
+</svg>`;
+
+// ── FLIP CARD ──
+let _flipped=0, _total=0;
+function flipCard(wrapper){
+  if(wrapper.classList.contains('done')) return;
+  wrapper.classList.add('done');
+  const inner=wrapper.querySelector('.card-inner');
+  inner.classList.add('flipped');
+  setTimeout(()=>{
+    const slot=wrapper.closest('.card-slot');
+    slot.querySelector('.card-badge')?.classList.add('show');
+    slot.querySelector('.card-keyword-label')?.classList.add('show');
+  }, 380);
+  _flipped++;
+  const counter=document.getElementById('flip-counter');
+  if(counter){
+    if(_flipped>=_total){
+      counter.innerHTML='✦ 所有牌已翻開 · 解讀提示詞已生成 ✦';
+      counter.classList.add('done');
+      const promptBox=document.getElementById('tarot-prompt-box');
+      if(promptBox){
+        setTimeout(()=>{
+          promptBox.style.display='block';
+          requestAnimationFrame(()=>{promptBox.style.opacity='1';});
+        }, 500);
+      }
+    } else {
+      counter.innerHTML=`點擊牌面翻牌 &nbsp;<span class="f-cur">${_flipped}</span> / ${_total}`;
+    }
+  }
+}
+
+// ── GO TO AI ──
+const AI_URLS={
+  chatgpt:'https://chat.openai.com/',
+  claude:'https://claude.ai/new',
+  gemini:'https://gemini.google.com/',
+  copilot:'https://copilot.microsoft.com/',
+  perplexity:'https://www.perplexity.ai/',
+};
+const AI_NAMES={chatgpt:'ChatGPT',claude:'Claude',gemini:'Gemini',copilot:'Copilot',perplexity:'Perplexity'};
+function goToAI(service, promptId){
+  const el=document.getElementById(promptId);
+  const text=el?el.textContent:'';
+  const url=AI_URLS[service];
+  if(text){
+    navigator.clipboard.writeText(text)
+      .then(()=>{ showToast(`✦ 提示詞已複製 · 正在前往 ${AI_NAMES[service]}`); setTimeout(()=>window.open(url,'_blank'),800); })
+      .catch(()=>window.open(url,'_blank'));
+  } else { window.open(url,'_blank'); }
+}
+
+// ── AI BUTTONS HTML ──
+function aiButtonsHtml(promptId){
+  return `<div class="ai-row">
+    <div class="ai-row-label">複製提示詞並前往 AI</div>
+    <div class="ai-btns">
+      <button class="ai-btn chatgpt" onclick="goToAI('chatgpt','${promptId}')"><span class="ai-dot"></span>ChatGPT</button>
+      <button class="ai-btn claude" onclick="goToAI('claude','${promptId}')"><span class="ai-dot"></span>Claude</button>
+      <button class="ai-btn gemini" onclick="goToAI('gemini','${promptId}')"><span class="ai-dot"></span>Gemini</button>
+      <button class="ai-btn copilot" onclick="goToAI('copilot','${promptId}')"><span class="ai-dot"></span>Copilot</button>
+      <button class="ai-btn perplexity" onclick="goToAI('perplexity','${promptId}')"><span class="ai-dot"></span>Perplexity</button>
+    </div>
+  </div>`;
 }
 
 // ── TAROT CARD IMAGE PATHS ──
@@ -1335,10 +1473,11 @@ function buildZodiacTab(zodiac, lifepath, lp, birth, city, gender, fiveGrid){
     </div>
     <div class="prompt-box">
       <div class="prompt-box-header">
-        <div><div class="prompt-box-label">✦ AI 占星解讀提示詞</div><div class="prompt-box-sub">複製以下內容，貼入 ChatGPT・Claude・Gemini 取得深度解析</div></div>
-        <button class="copy-btn" onclick="copyPrompt('zodiac-prompt')">複製提示詞</button>
+        <div><div class="prompt-box-label">✦ AI 占星解讀提示詞</div><div class="prompt-box-sub">點擊下方按鈕自動複製並前往 AI 工具</div></div>
+        <button class="copy-btn" onclick="copyPrompt('zodiac-prompt')">僅複製</button>
       </div>
       <div class="prompt-text" id="zodiac-prompt">${escHtml(prompt)}</div>
+      ${aiButtonsHtml('zodiac-prompt')}
     </div>
   </div>`;
 }
@@ -1383,10 +1522,11 @@ function buildNumerologyTab(name, birth, lifepath, lp, personalYear, py, fiveGri
     </div>
     <div class="prompt-box">
       <div class="prompt-box-header">
-        <div><div class="prompt-box-label">✦ AI 靈數解讀提示詞</div><div class="prompt-box-sub">複製以下內容，貼入 ChatGPT・Claude・Gemini 取得深度解析</div></div>
-        <button class="copy-btn" onclick="copyPrompt('numerology-prompt')">複製提示詞</button>
+        <div><div class="prompt-box-label">✦ AI 靈數解讀提示詞</div><div class="prompt-box-sub">點擊下方按鈕自動複製並前往 AI 工具</div></div>
+        <button class="copy-btn" onclick="copyPrompt('numerology-prompt')">僅複製</button>
       </div>
       <div class="prompt-text" id="numerology-prompt">${escHtml(prompt)}</div>
+      ${aiButtonsHtml('numerology-prompt')}
     </div>
   </div>`;
 }
@@ -1399,15 +1539,21 @@ function buildTarotTab(name, zodiac, lifepath, birth, seed, question){
 
   const colClass=spread.count===1?'cols-1':spread.count<=3?'cols-3':spread.count<=6?'cols-3':'cols-4';
 
+  _flipped=0; _total=cards.length;
   const cardsHtml=cards.map((c,i)=>{
     const cardIdx=TAROT_MAJOR.findIndex(t=>t.name===c.name);
     const imgSrc=CARD_IMAGES[cardIdx]||'';
-    const cardVisual=imgSrc
-      ? `<img src="${imgSrc}" alt="${c.name}" style="width:100%;height:auto;display:block;border-radius:8px;">`
+    const frontFace=imgSrc
+      ? `<img src="${imgSrc}" alt="${c.name}">`
       : getCardSVG(cardIdx);
     return `<div class="card-slot">
     <div class="card-pos-label">${spread.positions[i]}</div>
-    <div class="card-face-wrap${c.reversed?' reversed':''}">${cardVisual}</div>
+    <div class="card-flip-wrapper" onclick="flipCard(this)">
+      <div class="card-inner">
+        <div class="card-back-face">${CARD_BACK_SVG}</div>
+        <div class="card-front-face${c.reversed?' reversed':''}">${frontFace}</div>
+      </div>
+    </div>
     <div class="card-badge ${c.reversed?'rev':'up'}">${c.reversed?'逆位':'正位'}</div>
     <div class="card-keyword-label">${c.keyword}</div>
   </div>`;}).join('');
@@ -1425,15 +1571,16 @@ function buildTarotTab(name, zodiac, lifepath, birth, seed, question){
     <p style="font-size:12px;color:var(--silver-dim);margin-bottom:20px">${spread.desc}・每張牌的位置含義已包含在 AI 提示詞中</p>
     <div class="cards-grid ${colClass}">${cardsHtml}</div>
     <div class="block-content">
-      <p>以上是你的 <span class="highlight">${spread.name}</span> 牌陣結果。${spread.count}個位置各有其意義，最精準的解讀需要結合牌義、位置含義與你的個人情況。</p>
-      <p>下方提示詞已包含完整的牌陣資料與解讀請求，貼入 AI 工具即可獲得深度分析。</p>
+      <p>牌面蓋著，<span class="highlight">點擊每張牌</span>逐一翻開，全部翻完後解讀提示詞才會出現。</p>
     </div>
-    <div class="prompt-box">
+    <div id="flip-counter" class="flip-counter">點擊牌面翻牌 &nbsp;<span class="f-cur">0</span> / ${cards.length}</div>
+    <div id="tarot-prompt-box" class="prompt-box" style="display:none;opacity:0;transition:opacity .8s ease;">
       <div class="prompt-box-header">
-        <div><div class="prompt-box-label">✦ AI 塔羅解讀提示詞</div><div class="prompt-box-sub">複製以下內容，貼入 ChatGPT・Claude・Gemini 取得深度解析</div></div>
-        <button class="copy-btn" onclick="copyPrompt('tarot-prompt')">複製提示詞</button>
+        <div><div class="prompt-box-label">✦ AI 塔羅解讀提示詞</div><div class="prompt-box-sub">點擊下方按鈕自動複製並前往 AI 工具</div></div>
+        <button class="copy-btn" onclick="copyPrompt('tarot-prompt')">僅複製</button>
       </div>
       <div class="prompt-text" id="tarot-prompt">${escHtml(prompt)}</div>
+      ${aiButtonsHtml('tarot-prompt')}
     </div>
   </div>`;
 }
