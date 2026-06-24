@@ -1618,14 +1618,40 @@ const FIREBASE_DB_URL=FIREBASE_CONFIG.databaseURL;
   if(FIREBASE_DB_URL.includes('YOUR_PROJECT_ID')){document.getElementById('counter-num').textContent='?';return;}
   const sessionId=crypto.randomUUID();
   const userPath=`${FIREBASE_DB_URL}/online_users/${sessionId}.json`;
-  async function heartbeat(){try{await fetch(userPath,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()}),keepalive:true});}catch(e){}}
-  async function removeMe(){try{await fetch(userPath,{method:'DELETE',keepalive:true});}catch(e){}}
-  async function fetchCount(){try{const r=await fetch(`${FIREBASE_DB_URL}/online_users.json?shallow=true`);if(!r.ok)return null;const d=await r.json();return d?Object.keys(d).length:0;}catch(e){return null;}}
-  function updateDisplay(n){const el=document.getElementById('counter-num');const prev=parseInt(el.textContent)||0;if(n===null){el.textContent='–';return;}el.textContent=n;if(n!==prev){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),400);}}
-  await heartbeat();updateDisplay(await fetchCount());
-  setInterval(async()=>{await heartbeat();updateDisplay(await fetchCount());},30000);
+
+  // 寫入心跳
+  async function heartbeat(){
+    try{await fetch(userPath,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()}),keepalive:true});}catch(e){}
+  }
+  // 離開時刪除
+  async function removeMe(){
+    try{await fetch(userPath,{method:'DELETE',keepalive:true});}catch(e){}
+  }
+  // 只計算 90 秒內有心跳的 session（過濾殘留）
+  async function fetchCount(){
+    try{
+      const r=await fetch(`${FIREBASE_DB_URL}/online_users.json`);
+      if(!r.ok)return null;
+      const d=await r.json();
+      if(!d)return 0;
+      const cutoff=Date.now()-90000;
+      return Object.values(d).filter(v=>v&&v.ts&&v.ts>cutoff).length;
+    }catch(e){return null;}
+  }
+  function updateDisplay(n){
+    const el=document.getElementById('counter-num');
+    const prev=parseInt(el.textContent)||0;
+    if(n===null){el.textContent='–';return;}
+    el.textContent=n;
+    if(n!==prev){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),400);}
+  }
+
+  await heartbeat();
+  updateDisplay(await fetchCount());
+  // 每 60 秒心跳一次，90 秒未更新的視為已離線
+  setInterval(async()=>{await heartbeat();updateDisplay(await fetchCount());},60000);
+  // 只在真正關閉頁面時移除，切換 tab 不移除
   window.addEventListener('beforeunload',removeMe);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)removeMe();else heartbeat();});
 })();
 </script>
 </body>
