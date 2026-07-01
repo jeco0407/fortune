@@ -6,6 +6,7 @@
 <title>2025 下半年命運之鏡</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
 :root {
   --void:#04040f; --deep:#0a0820; --indigo:#13103a; --violet:#1e1450;
@@ -275,6 +276,25 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
 #toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,20,80,.95);border:1px solid var(--gold-dim);border-radius:40px;padding:12px 24px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:var(--gold-light);z-index:9999;opacity:0;pointer-events:none;transition:all .4s;white-space:nowrap;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+/* SHARE TRIGGER */
+#share-trigger{position:fixed;top:20px;right:20px;z-index:999;display:flex;align-items:center;gap:8px;background:rgba(10,8,32,.85);border:1px solid rgba(201,168,76,.25);border-radius:40px;padding:8px 16px 8px 14px;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.4);cursor:pointer;animation:fadeDown 1s ease .5s both;transition:border-color .3s;user-select:none;}
+#share-trigger:hover{border-color:rgba(201,168,76,.5);}
+.share-trigger-icon{font-size:14px;line-height:1;}
+.share-trigger-text{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:var(--silver-dim);white-space:nowrap;}
+/* SHARE QR MODAL */
+#share-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(4,4,15,.85);backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .4s;}
+#share-modal.show{opacity:1;pointer-events:auto;}
+.share-modal-box{background:linear-gradient(160deg,rgba(30,20,80,.98),rgba(10,8,32,.99));border:1px solid rgba(201,168,76,.4);border-radius:24px;padding:40px 36px;text-align:center;position:relative;max-width:320px;width:90%;box-shadow:0 0 80px rgba(80,40,160,.5),0 0 0 1px rgba(201,168,76,.1) inset;}
+#share-modal.show .share-modal-box{animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1) both;}
+.share-modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--rose),var(--gold),transparent);}
+.share-modal-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:5px;color:var(--gold);margin-bottom:6px;text-transform:uppercase;}
+.share-modal-sub{font-size:12px;color:var(--silver-dim);font-family:'EB Garamond',serif;font-style:italic;margin-bottom:24px;}
+#qr-container{border-radius:12px;border:2px solid rgba(201,168,76,.35);display:inline-block;padding:12px;background:#04040f;margin-bottom:20px;}
+#qr-container img,#qr-container canvas{display:block;border-radius:6px;}
+.share-modal-url{font-size:10px;color:var(--gold-dim);letter-spacing:.5px;margin-bottom:24px;word-break:break-all;max-width:260px;margin-left:auto;margin-right:auto;line-height:1.6;}
+.share-modal-close{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;padding:10px 28px;border:1px solid rgba(201,168,76,.3);border-radius:40px;background:transparent;color:var(--gold-dim);cursor:pointer;transition:all .3s;text-transform:uppercase;}
+.share-modal-close:hover{border-color:var(--gold);color:var(--gold-light);background:rgba(201,168,76,.08);}
+@keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 /* ONLINE COUNTER */
 #online-counter{position:fixed;top:20px;left:20px;z-index:999;display:flex;align-items:center;gap:10px;background:rgba(10,8,32,.85);border:1px solid rgba(201,168,76,.25);border-radius:40px;padding:8px 16px 8px 12px;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.4);animation:fadeDown 1s ease .5s both;transition:border-color .3s;}
 #online-counter:hover{border-color:rgba(201,168,76,.5);}
@@ -325,6 +345,8 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
   .trinity-card:nth-child(3){grid-column:auto;}
   #online-counter{top:10px;left:10px;padding:6px 10px 6px 8px;}
   .counter-text{display:none;}
+  #share-trigger{top:10px;right:10px;padding:6px 10px 6px 10px;}
+  .share-trigger-text{display:none;}
 }
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:var(--void);}
@@ -335,6 +357,24 @@ body{background:var(--void);color:var(--white);font-family:'Noto Serif TC',serif
 <body>
 
 <div id="toast"></div>
+
+<!-- SHARE QR MODAL -->
+<div id="share-modal" onclick="closeShareModalOutside(event)">
+  <div class="share-modal-box">
+    <div class="share-modal-title">✦ 分享命運之鏡 ✦</div>
+    <div class="share-modal-sub">掃描 QR Code 即可進入此頁面</div>
+    <div id="qr-container"></div>
+    <div class="share-modal-url" id="share-url-text"></div>
+    <button class="share-modal-close" onclick="closeShareModal()">✕ 關閉</button>
+  </div>
+</div>
+
+<!-- SHARE TRIGGER BUTTON -->
+<div id="share-trigger" onclick="openShareModal()" title="分享此頁面">
+  <span class="share-trigger-icon">⬡</span>
+  <span class="share-trigger-text">分享</span>
+</div>
+
 <div id="online-counter">
   <div class="counter-pulse"></div>
   <span class="counter-text">在線人數</span>
@@ -1606,6 +1646,34 @@ function restartRitual(){
   document.getElementById('inp-tarot-question').value='';
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+// ── SHARE / QR CODE ──
+let _qrGenerated=false;
+function openShareModal(){
+  const modal=document.getElementById('share-modal');
+  modal.classList.add('show');
+  const url=window.location.href;
+  document.getElementById('share-url-text').textContent=url;
+  if(!_qrGenerated){
+    new QRCode(document.getElementById('qr-container'),{
+      text:url,
+      width:200,
+      height:200,
+      colorDark:'#c9a84c',
+      colorLight:'#04040f',
+      correctLevel:QRCode.CorrectLevel.M
+    });
+    _qrGenerated=true;
+  }
+}
+function closeShareModal(){
+  document.getElementById('share-modal').classList.remove('show');
+}
+function closeShareModalOutside(e){
+  if(e.target===document.getElementById('share-modal')) closeShareModal();
+}
+// ESC key closes modal
+document.addEventListener('keydown',function(e){if(e.key==='Escape') closeShareModal();});
 
 // ── FIREBASE ONLINE COUNTER ──
 const FIREBASE_CONFIG={
